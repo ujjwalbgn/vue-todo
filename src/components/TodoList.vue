@@ -3,13 +3,25 @@
     <input type="text" v-model="newTodo" @keyup.enter="addTodo" class="todo-input" placeholder="what needs to be done">
     <div v-for="(todo,index) in todos" :key="todo.id" class="todo-item">
       <div class="todo-item-left">
-        <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label ">{{ todo.title }}</div>
+        <input type="checkbox" v-model="todo.completed">
+        <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label" :class="{ completed : todo.completed}">
+          {{ todo.title }}
+        </div>
         <input v-else class="todo-item-edit" type="text" v-model="todo.title" @blur="doneEdit(todo)"
                @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)" v-focus>
       </div>
       <div class="remove-item" @click="removeTodo(index)">
         &times;
       </div>
+    </div>
+    <div class="extra-container">
+      <div>
+        <label>
+          <input type="checkbox" :checked="!anyRemaining" @change="checkAllTodos">
+          Check All
+        </label>
+      </div>
+      <div>{{remaining }} items left</div>
     </div>
   </div>
 </template>
@@ -38,6 +50,17 @@
           ]
       }
     },
+
+    computed: {
+      remaining(){
+        return this.todos.filter(todo => !todo.completed).length
+      },
+
+      anyRemaining(){
+        return this.remaining !== 0;
+      }
+    },
+
     directives: {
       focus: {
         // directive definition
@@ -77,6 +100,10 @@
       cancelEdit(todo){
         todo.title = this.beforeEditCache;
         todo.editing = false;
+      },
+
+      checkAllTodos(){
+        this.todos.forEach((todo)=> todo.completed = event.target.checked)
       },
 
       removeTodo(index){
