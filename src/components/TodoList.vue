@@ -1,6 +1,7 @@
 <template>
   <div class="hello">
     <input type="text" v-model="newTodo" @keyup.enter="addTodo" class="todo-input" placeholder="what needs to be done">
+    <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
     <div v-for="(todo,index) in todosFiltered" :key="todo.id" class="todo-item">
       <div class="todo-item-left">
         <input type="checkbox" v-model="todo.completed">
@@ -14,6 +15,7 @@
         &times;
       </div>
     </div>
+    </transition-group>
     <div class="extra-container">
       <div>
         <label>
@@ -34,10 +36,9 @@
 
 
       <div>
-        <!--<transition name="fade">-->
-          <!--<button v-if = "showClearCompletedButton" @click="clearComplete">Clear Completed</button>-->
-        <!--</transition>-->
-        Clear Completed
+        <transition name="fade">
+          <button v-if="showClearCompletedButton" @click="clearCompleted">Clear Completed</button>
+        </transition>
       </div>
     </div>
   </div>
@@ -88,6 +89,10 @@
 
       anyRemaining(){
         return this.remaining !== 0;
+      },
+
+      showClearCompletedButton() {
+        return this.todos.filter(todo => todo.completed).length > 0
       }
     },
 
@@ -139,6 +144,10 @@
       removeTodo(index){
         this.todos.splice(index, 1)
       },
+
+      clearCompleted(){
+        this.todos = this.todos.filter(todo => !todo.completed)
+      }
     },
   }
 </script>
