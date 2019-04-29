@@ -1,154 +1,108 @@
 <template>
-  <div class="hello">
-    <input type="text" v-model="newTodo" @keyup.enter="addTodo" class="todo-input" placeholder="what needs to be done">
+  <div>
+    <input type="text" class="todo-input" placeholder="What needs to be done" v-model="newTodo" @keyup.enter="addTodo">
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
-    <div v-for="(todo,index) in todosFiltered" :key="todo.id" class="todo-item">
-      <div class="todo-item-left">
-        <input type="checkbox" v-model="todo.completed">
-        <div v-if="!todo.editing" @dblclick="editTodo(todo)" class="todo-item-label" :class="{ completed : todo.completed}">
-          {{ todo.title }}
-        </div>
-        <input v-else class="todo-item-edit" type="text" v-model="todo.title" @blur="doneEdit(todo)"
-               @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)" v-focus>
-      </div>
-      <div class="remove-item" @click="removeTodo(index)">
-        &times;
-      </div>
-    </div>
+      <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" :checkAll="!anyRemaining" @removedTodo="removeTodo" @finishedEdit="finishedEdit">
+      </todo-item>
     </transition-group>
+
     <div class="extra-container">
-      <div>
-        <label>
-          <input type="checkbox" :checked="!anyRemaining" @change="checkAllTodos">
-          Check All
-        </label>
-      </div>
-      <div>{{remaining }} items left</div>
+      <div><label><input type="checkbox" :checked="!anyRemaining" @change="checkAllTodos"> Check All</label></div>
+      <div>{{ remaining }} items left</div>
     </div>
 
     <div class="extra-container">
       <div>
-        <button :class="{ active: filter == 'all' }" @click="filter ='all'">All</button>
-        <button :class="{ active: filter == 'active'}" @click="filter = 'active'">Active</button>
-        <button :class="{ active: filter == 'complete'}" @click="filter = 'complete'">Completed</button>
+        <button :class="{ active: filter == 'all' }" @click="filter = 'all'">All</button>
+        <button :class="{ active: filter == 'active' }" @click="filter = 'active'">Active</button>
+        <button :class="{ active: filter == 'completed' }" @click="filter = 'completed'">Completed</button>
       </div>
-
-
 
       <div>
         <transition name="fade">
           <button v-if="showClearCompletedButton" @click="clearCompleted">Clear Completed</button>
         </transition>
       </div>
+
     </div>
   </div>
 </template>
 
 <script>
+  import TodoItem from './TodoItem'
   export default {
     name: 'todo-list',
+    components: {
+      TodoItem,
+    },
     data () {
       return {
-        newTodo : '',
-        idForTodo : 3,
-        beforeEditCache : '',
+        newTodo: '',
+        idForTodo: 3,
         filter: 'all',
         todos: [
           {
-          'id': 1,
-          'title' : 'Finish Vue Screencast',
-          'complete': false,
-            'editing' : false,
-        },
+            'id': 1,
+            'title': 'Finish Vue Screencast',
+            'completed': false,
+            'editing': false,
+          },
           {
-           'id' : 2,
-           'title' : 'Take over the world',
-           'complete' : false,
-            'editing' : false,
-          }
-          ]
+            'id': 2,
+            'title': 'Take over world',
+            'completed': false,
+            'editing': false,
+          },
+        ]
       }
     },
-
     computed: {
-
-      todosFiltered(){
-        if (this.filter == 'all'){
+      remaining() {
+        return this.todos.filter(todo => !todo.completed).length
+      },
+      anyRemaining() {
+        return this.remaining != 0
+      },
+      todosFiltered() {
+        if (this.filter == 'all') {
           return this.todos
-        } else if (this.filter == 'active'){
+        } else if (this.filter == 'active') {
           return this.todos.filter(todo => !todo.completed)
-        } else if (this.filter == 'complete') {
+        } else if (this.filter == 'completed') {
           return this.todos.filter(todo => todo.completed)
         }
         return this.todos
       },
-
-      remaining(){
-        return this.todos.filter(todo => !todo.completed).length
-      },
-
-      anyRemaining(){
-        return this.remaining !== 0;
-      },
-
       showClearCompletedButton() {
         return this.todos.filter(todo => todo.completed).length > 0
       }
     },
-
-    directives: {
-      focus: {
-        // directive definition
-        inserted: function (el) {
-          el.focus()
-        }
-      }
-    },
-
     methods: {
-      addTodo(){
-        if(this.newTodo.trim().length == 0){
+      addTodo() {
+        if (this.newTodo.trim().length == 0) {
           return
         }
         this.todos.push({
           id: this.idForTodo,
           title: this.newTodo,
-          completed : false,
-        });
-
-        this.newTodo = '';
-        this.idForTodo++;
+          completed: false,
+        })
+        this.newTodo = ''
+        this.idForTodo++
       },
-
-      editTodo(todo){
-        this.beforeEditCache = todo.title;
-        todo.editing = true;
-      },
-
-      doneEdit(todo){
-        if(todo.title.trim().length == ''){
-          todo.title = this.beforeEditCache
-        }
-        todo.editing = false;
-      },
-
-      cancelEdit(todo){
-        todo.title = this.beforeEditCache;
-        todo.editing = false;
-      },
-
-      checkAllTodos(){
-        this.todos.forEach((todo)=> todo.completed = event.target.checked)
-      },
-
-      removeTodo(index){
+      removeTodo(index) {
         this.todos.splice(index, 1)
       },
-
-      clearCompleted(){
+      checkAllTodos() {
+        this.todos.forEach((todo) => todo.completed = event.target.checked)
+      },
+      clearCompleted() {
         this.todos = this.todos.filter(todo => !todo.completed)
+      },
+      finishedEdit(data) {
+        this.todos.splice(data.index, 1, data.todo)
       }
-    },
+    }
   }
 </script>
 
